@@ -4,19 +4,18 @@
 Sistema de notificaciones en tiempo real para una plataforma de gaming. 
 Los eventos existentes se dividen en dos categorías:
 #### Eventos del Juego
-  -LevelUp
-  -Item Acquired
-  -Challenge Completed
-  -PvP:Attacked or defeated
+  - Level Up <br>
+  - Item Acquired <br>
+  - Challenge Completed <br>
+  - PvP:Attacked or defeated<br>
 #### Eventos Sociales  
-  -Friend Request
-  -Friendr accepted
-  -New Follower
+  - Friend Request <br>
+  - Friend accepted <br>
+  - New Follower <br>
 
 Según su tipo, los eventos son emitidos por diferentes componentes de la plataforma. Al recibir un evento, el sistema de notificaciones consulta las preferencias del usuario para verificar que tenga habilitada la recepción de notificaciones correspondientes a ese tipo de evento.
 
-Este sistema está construido sobre una arquitectura event-driven con un patrón Observer. 
-Los evento existentes se publican a un bus central al cual los suscriptores reaccionan.
+Este sistema está construido sobre una arquitectura orientada a eventos (event-driven), utilizando un Event Bus basado en el patrón Observer. Los eventos se publican en un bus central al que diferentes suscriptores reaccionan de forma independiente.
 ## Estructura de carpetas
 ````text
 notification-system/
@@ -72,42 +71,47 @@ notification-system/
 
 
 ## Flujo de eventos
-Generación del evento: RandomEventGenerator simula que algo pasó en el juego, llamando a un método público de GameEngine o SocialSystem como lo haría cualquier parte real del juego.
-Traducción a evento: GameEngine/SocialSystem construyen un GameEvent tipado con su EventType y su EventPayload correspondiente y lo publican al EventBus.
-Reparto: el EventBus entrega el evento a todos los suscriptores registrados (que también pueden desuscribirse) para ese tipo: NotificationServiceImpl y AnalyticsListener (suscriptor adicional para demostración)
-Decisión: NotificationServiceImpl consulta UserPreferencesService y si la categoría del usuario está deshabilitada, el flujo termina ahí
-Entrega: si está habilitada, se arma el Notification final con el mensaje de texto ya construido y se entrega a través de NotificationChannel el cual para este proyecto es por consola.
+Generación del evento: RandomEventGenerator simula que algo pasó en el juego, llamando a un método público de GameEngine o SocialSystem como lo haría cualquier parte real del juego.<br>
 
-## Installs necesarios
--JDK 25 (o versiones superiores a la 21)
--Maven
--Extension Pack for Java (si se corre en VSC)
+Traducción a evento: GameEngine/SocialSystem construyen un GameEvent tipado con su EventType y su EventPayload correspondiente y lo publican al EventBus.<br>
 
-## Correr el proyecto
+Reparto: el EventBus entrega el evento a todos los suscriptores registrados (que también pueden desuscribirse) para ese tipo: NotificationServiceImpl y AnalyticsListener (suscriptor adicional para demostración)<br>
 
--Desde VS Code: abrir src/main/java/com/notifications/RandomEventSystem.java y usar el enlace Run que aparece sobre public static void main().
+Decisión: NotificationServiceImpl consulta UserPreferencesService y si la categoría del usuario está deshabilitada, el flujo termina ahí. <br>
 
--Desde terminal, con Maven:
+Entrega: si está habilitada, se arma el Notification final con el mensaje de texto ya construido y se entrega a través de NotificationChannel el cual para este proyecto es por consola.<br>
+
+## Instalaciones necesarias
+- JDK 25 (o versiones superiores a la 21)<br>
+- Maven<br>
+- Extension Pack for Java (si se corre en VSC)<br>
+
+## Ejecución del proyecto
+
+- Desde VS Code: 
+abrir src/main/java/com/notifications/RandomEventSystem.java y usar el enlace Run que aparece sobre public static void main().
+
+- Desde terminal con Maven:
 
 mvn compile exec:java -Dexec.mainClass="com.notifications.RandomEventSystem"
 
 La simulación genera 15 eventos aleatorios con una pequeña pausa entre cada uno, imprimiendo cada notificación enviada u omitida por preferencia del usuario.
 
-## Correr las pruebas
+## Ejecución de las pruebas
 
 Desde terminal, con Maven:
 
 mvn test
 
-Se deberían ejecutar 9 pruebas con JUnit 5 + Mockito, cubriendo preferencias por defecto y explícitas, construcción de mensajes por tipo de payload, filtrado por categoría deshabilitada, entrega selectiva del bus, y unsubscribe.
+Se deberían ejecutar 9 pruebas con JUnit 5 + Mockito, cubriendo preferencias por defecto y explícitas, construcción de mensajes por tipo de payload, filtrado por categoría deshabilitada, entrega selectiva de eventos por parte del bus y unsubscribe.
 
 ## Proceso de desarrollo 
-El proyecto se construyó por capas,cada etapa se apoya en la anterior sin necesitar rehacer lo ya construido.
+El proyecto se construyó por capas, cada etapa se apoya en la anterior sin necesitar rehacer lo ya construido.
 
 ###### Día 1 Diseño base y modelo de dominio
 
 Análisis del reto y elección de Java como lenguaje, lo que implicó repasar principios de Java y POO. 
-Contrucción de primeras clases: Notification, EventType, NotificationCategory, UserPreferencesService, NotificationChannel, GameEngine/SocialSystem con llamadas directas al servicio de notificaciones (sin la implementación del bus todavía).
+Construcción de primeras clases: Notification, EventType, NotificationCategory, UserPreferencesService, NotificationChannel, GameEngine/SocialSystem con llamadas directas al servicio de notificaciones (sin la implementación del bus todavía).
 
 ###### Día 2 Desacoplamiento con un Event Bus real
 
@@ -121,7 +125,7 @@ Javadoc en interfaces y clases para documentación en el código.
 Separación del código en paquetes por responsabilidad (model, bus, channel, service, emitters), siguiendo la convención estándar src/main/java / src/test/java. Creación del pom.xml con las dependencias reales (SLF4J, JUnit 5, Mockito). Verificación de que el proyecto compila y las 9 pruebas siguen pasando igual tras la reorganización.
 
 ###### Día 4 Documentación final
-Consolidé documentación recopilada durante la semana para generar este readme y ARCHITECTURE.md
+Consolidé documentación recopilada durante la semana para generar este README y ARCHITECTURE.md
 
 ## Documentación adicional 
-Puede consultar ARCHITECTURE.md para  mayor información sobre decisiones de diseño y su justificación, errores contemplados y su prevención, concurrencia, puntos de extensión, mantenibilidad y escalabilidad y limitaciones conocidas.
+Puede consultar [ARCHITECTURE.md](ARCHITECTURE.md) para  mayor información sobre decisiones de diseño y su justificación, errores contemplados y su prevención, concurrencia, puntos de extensión, mantenibilidad y escalabilidad y limitaciones conocidas.
