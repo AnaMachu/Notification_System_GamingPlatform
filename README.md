@@ -64,25 +64,26 @@ notification-system/
             └── com/
                 └── notifications/
                     └── RandomEventSystemTest.java
+                    └──  PerObserverQueueEventBusTest.java
+
 ````
 
 ## Arquitectura
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/cba083e7-746a-4e47-b0bd-e63f71617604" />
-
+![alt text](image-2.png)
 
 ## Flujo de eventos
 Generación del evento: RandomEventGenerator simula que algo pasó en el juego, llamando a un método público de GameEngine o SocialSystem como lo haría cualquier parte real del juego.<br>
 
 Traducción a evento: GameEngine/SocialSystem construyen un GameEvent tipado con su EventType y su EventPayload correspondiente y lo publican al EventBus.<br>
 
-Reparto: el EventBus entrega el evento a todos los suscriptores registrados (que también pueden desuscribirse) para ese tipo: NotificationServiceImpl y AnalyticsListener (suscriptor adicional para demostración)<br>
+Reparto: con la implementación activa (PerObserverQueueEventBus), el hilo productor deja el evento en la cola dedicada de cada suscriptor interesado en ese tipo, y retorna de inmediato. Cada suscriptor tiene su propio hilo consumidor procesando su propia cola, de forma aisladas. Los suscriptores también pueden desuscribirse dinámicamente.<br>
 
 Decisión: NotificationServiceImpl consulta UserPreferencesService y si la categoría del usuario está deshabilitada, el flujo termina ahí. <br>
 
 Entrega: si está habilitada, se arma el Notification final con el mensaje de texto ya construido y se entrega a través de NotificationChannel el cual para este proyecto es por consola.<br>
 
 ## Instalaciones necesarias
-- JDK 25 (o versiones superiores a la 21)<br>
+- JDK 21 o versiones superiores<br>
 - Maven<br>
 - Extension Pack for Java (si se corre en VSC)<br>
 
@@ -103,7 +104,10 @@ Desde terminal, con Maven:
 
 mvn test
 
-Se deberían ejecutar 9 pruebas con JUnit 5 + Mockito, cubriendo preferencias por defecto y explícitas, construcción de mensajes por tipo de payload, filtrado por categoría deshabilitada, entrega selectiva de eventos por parte del bus y unsubscribe.
+Se ejecutan 9 pruebas con JUnit 5 + Mockito, repartidas en dos archivos:
+- **RandomEventSystemTest** (5 pruebas) — preferencias por defecto y explícitas, construcción de mensajes por tipo de payload, filtrado por categoría deshabilitada.
+- **PerObserverQueueEventBusTest** (4 pruebas) — el contrato del bus contra la implementación activa: entrega selectiva de eventos por tipo, unsubscribe, y conteo de AnalyticsListener.
+
 
 ## Proceso de desarrollo 
 El proyecto se construyó por capas, cada etapa se apoya en la anterior sin necesitar rehacer lo ya construido.
@@ -124,8 +128,13 @@ Payloads tipados: Uso de sealed interface EventPayload con un record por tipo de
 Javadoc en interfaces y clases para documentación en el código.
 Separación del código en paquetes por responsabilidad (model, bus, channel, service, emitters), siguiendo la convención estándar src/main/java / src/test/java. Creación del pom.xml con las dependencias reales (SLF4J, JUnit 5, Mockito). Verificación de que el proyecto compila y las 9 pruebas siguen pasando igual tras la reorganización.
 
-###### Día 4 Documentación final
-Consolidé documentación recopilada durante la semana para generar este README y ARCHITECTURE.md
+###### Día 4 Concurrencia y aislamiento
+Implementación de QueuedEventBus que era asíncrona, cola compartida con un solo hilo consumidor y análisis de sus ventajas y desventajas frente al bus síncrono original. Identificación de que una cola compartida no aísla a los observers entre sí. 
+Implementación de PerObserverQueueEventBus, con cola e hilo dedicados por cada observer, logrando aislamiento real
+ Auditoría de riesgos de concurrencia en el nuevo diseño. Swap de SimpleEventBus a PerObserverQueueEventBus como implementación por defecto. Actualización de las pruebas para cubrir la implementación activa.
+
+###### Día 5 Documentación final
+Consolidé documentación recopilada durante el proyecto para generar este README y ARCHITECTURE.md, incluyendo decisiones de diseño, principios SOLID aplicados, análisis comparativo de las tres implementaciones del bus, y una propuesta de escalamiento con Amazon SNS + SQS.
 
 ## Documentación adicional 
 Puede consultar [ARCHITECTURE.md](ARCHITECTURE.md) para  mayor información sobre decisiones de diseño y su justificación, errores contemplados y su prevención, concurrencia, puntos de extensión, mantenibilidad y escalabilidad y limitaciones conocidas.
