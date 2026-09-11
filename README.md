@@ -69,7 +69,7 @@ notification-system/
 ````
 
 ## Arquitectura
-![alt text](image-2.png)
+<img width="800" height="322" alt="image" src="https://github.com/user-attachments/assets/d1929ca8-0b89-4fdf-87cd-799ba1529cc5" />
 
 ## Flujo de eventos
 Generación del evento: RandomEventGenerator simula que algo pasó en el juego, llamando a un método público de GameEngine o SocialSystem como lo haría cualquier parte real del juego.<br>
