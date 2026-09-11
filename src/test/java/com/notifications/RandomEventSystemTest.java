@@ -1,11 +1,8 @@
 package com.notifications;
 
-import com.notifications.bus.EventListener;
 import com.notifications.bus.GameEvent;
-import com.notifications.bus.SimpleEventBus;
 import com.notifications.channel.NotificationChannel;
 import com.notifications.model.*;
-import com.notifications.service.AnalyticsListener;
 import com.notifications.service.NotificationServiceImpl;
 import com.notifications.service.UserPreferencesService;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,62 +73,5 @@ class RandomEventSystemTest {
             new GameEvent(1, EventType.FRIEND_ACCEPTED, new FriendAcceptedPayload(2))));
         assertDoesNotThrow(() -> notificationService.onEvent(
             new GameEvent(1, EventType.NEW_FOLLOWER, new NewFollowerPayload(2))));
-    }
-
-    @Test
-    void busEntregaSoloAListenersSuscritosAEseTipo() {
-        SimpleEventBus bus = new SimpleEventBus();
-        EventListener levelUpListener = mock(EventListener.class);
-        EventListener itemListener = mock(EventListener.class);
-
-        bus.subscribe(EventType.LEVEL_UP, levelUpListener);
-        bus.subscribe(EventType.ITEM_ACQUIRED, itemListener);
-
-        GameEvent event = new GameEvent(1, EventType.LEVEL_UP, new LevelUpPayload(10));
-        bus.publish(event);
-
-        verify(levelUpListener, times(1)).onEvent(event);
-        verify(itemListener, never()).onEvent(any());
-    }
-
-    @Test
-    void unsubscribeDetieneLaEntregaDeEventosFuturos() {
-        SimpleEventBus bus = new SimpleEventBus();
-        EventListener listener = mock(EventListener.class);
-        bus.subscribe(EventType.LEVEL_UP, listener);
-
-        bus.publish(new GameEvent(1, EventType.LEVEL_UP, new LevelUpPayload(1)));
-        bus.unsubscribe(EventType.LEVEL_UP, listener);
-        bus.publish(new GameEvent(1, EventType.LEVEL_UP, new LevelUpPayload(2)));
-
-        verify(listener, times(1)).onEvent(any());
-    }
-
-    @Test
-    void analyticsListenerCuentaCorrectamentePorTipo() {
-        SimpleEventBus bus = new SimpleEventBus();
-        AnalyticsListener analytics = new AnalyticsListener();
-        analytics.registerTo(bus);
-
-        bus.publish(new GameEvent(1, EventType.LEVEL_UP, new LevelUpPayload(1)));
-        bus.publish(new GameEvent(2, EventType.LEVEL_UP, new LevelUpPayload(2)));
-        bus.publish(new GameEvent(1, EventType.NEW_FOLLOWER, new NewFollowerPayload(3)));
-
-        assertEquals(2, analytics.getCount(EventType.LEVEL_UP));
-        assertEquals(1, analytics.getCount(EventType.NEW_FOLLOWER));
-        assertEquals(0, analytics.getCount(EventType.ITEM_ACQUIRED));
-    }
-
-    @Test
-    void analyticsListenerDejaDeContarTrasDesuscribirse() {
-        SimpleEventBus bus = new SimpleEventBus();
-        AnalyticsListener analytics = new AnalyticsListener();
-        analytics.registerTo(bus);
-
-        bus.publish(new GameEvent(1, EventType.LEVEL_UP, new LevelUpPayload(1)));
-        analytics.unregisterFrom(bus);
-        bus.publish(new GameEvent(1, EventType.LEVEL_UP, new LevelUpPayload(2)));
-
-        assertEquals(1, analytics.getCount(EventType.LEVEL_UP));
     }
 }

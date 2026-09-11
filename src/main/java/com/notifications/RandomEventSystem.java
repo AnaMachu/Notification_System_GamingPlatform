@@ -1,7 +1,7 @@
 package com.notifications;
 
 import com.notifications.bus.EventBus;
-import com.notifications.bus.SimpleEventBus;
+import com.notifications.bus.PerObserverQueueEventBus;
 import com.notifications.channel.ConsoleNotificationChannel;
 import com.notifications.channel.NotificationChannel;
 import com.notifications.emitters.GameEngine;
@@ -31,7 +31,7 @@ public class RandomEventSystem {
      * @throws InterruptedException si el hilo es interrumpido durante la pausa entre eventos
      */
     public static void main(String[] args) throws InterruptedException {
-        EventBus bus = new SimpleEventBus();
+        PerObserverQueueEventBus bus = new PerObserverQueueEventBus();
 
         UserPreferencesService preferences = new UserPreferencesService();
         Random random = new Random();
@@ -60,7 +60,7 @@ public class RandomEventSystem {
             generator.generateRandomEvent();
             Thread.sleep(120 + random.nextInt(280));
         }
-
+        bus.shutdown();
         analytics.printSummary();
     }
 
